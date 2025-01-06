@@ -1,0 +1,56 @@
+# This playbook will "cleanup" the EOS device flash by removing all EOS images not currently used to boot
+
+- name: Cleanup the flash on EOS devices
+  hosts: dc1-leaf1    # replace with your value
+  connection: network_cli
+  gather_facts: false
+  collections:
+    - arista.eos
+  vars:
+    ansible_user: 'cvpadmin' # replace with your value
+    ansible_password: 'arista123' # replace with your value
+    ansible_network_os: eos
+    ansible_become: yes
+    ansible_become_method: enable
+    validation_mode_loose: true
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    # Use older EOS ciphers before 4.31.0:
+    # ansible_httpapi_ciphers: AES256-SHA:DHE-RSA-AES256-SHA:AES128-SHA:DHE-RSA-AES128-SHA
+
+  tasks:
+    - name: gather facts
+      arista.eos.eos_facts:
+        gather_subset: min
+
+    # - name: print facts
+    #   debug:
+    #     msg: "{{ ansible_facts.net_image }}"
+
+    - name: get list of SWI files in flash
+      arista.eos.eos_command:
+        commands: [ "dir flash:/*.swi | json" ]
+      register: found_files
+
+    # - name: debug file name
+    #   debug:
+    #     msg: "{{ found_files.stdout[0]['urls']['flash:/*.swi']['entries'].keys() }}"
+
+    - name: create list of commands to delete the EOS files not in use
+      ansible.builtin.set_fact:
+        delete_list: |
+          {% set delete_list = [] %}
+          {% for eos in found_files.stdout[0]['urls']['flash:/*.swi']['entries'].keys() %}
+          {%   if eos != ansible_facts.net_image.split('/')[-1] %}
+          {%     set delete_list = delete_list.append("delete flash:/" + eos) %}
+          {%   endif %}
+          {% endfor %}
+          {{ delete_list }}
+
+    # - name: print deletion commands
+    #   debug:
+    #     msg: "{{delete_list}}"
+
+    - name: delete EOS images not in use
+      arista.eos.eos_command:
+        commands: "{{delete_list}}"
