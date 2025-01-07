@@ -1,0 +1,11 @@
+name : AbootCheck
+args:
+   alog : YES
+   file : YES
+   outfile : /tmp/AbootCheck.txt
+# Arguments :
+#   alog = YES will write log entry in CVP change control log
+#   alog = NO will not write log entry in CVP change control log
+#   file = YES will create or append log to a file
+#   file = NO will not create or append log to a file
+#   outfile : define file name an location if write to file is used
