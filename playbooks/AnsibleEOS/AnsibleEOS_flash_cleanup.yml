@@ -54,3 +54,12 @@
     - name: delete EOS images not in use
       arista.eos.eos_command:
         commands: "{{delete_list}}"
+
+    - name: Files deleted on "{{inventory_hostname}}"
+      ansible.builtin.debug:
+        msg: |
+          {% set deleted_files = [] %}
+          {% for file in delete_list %}
+          {%   set deleted_files = deleted_files.append(file.split('delete ')[-1]) %}
+          {% endfor %}
+          {{ deleted_files }}
