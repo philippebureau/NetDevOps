@@ -1,0 +1,23 @@
+{# This template can be used for a VTEP in early deployment
+   steps.  This can prevent underlay BGP peering and / or EVPN
+   peering so basic validations can be done (ex: uplinks and MLAG )
+   use the following data model:
+   pre_depoy:
+     evpn: bool   # disable evpn peering
+     underlay_bgp: bool   # disable bgp peering with spines
+#}
+{% if pre_deploy is arista.avd.defined %}
+router_bgp:
+{%     if pre_deploy.evpn is arista.avd.defined(true) %}
+  address_family_evpn:
+    peer_groups:
+    - name: {{ bgp_peer_groups.evpn_overlay_peers.name | default('EVPN-OVERLAY-PEERS') }}
+      activate: false
+{%     endif%}
+{%     if pre_deploy.underlay_bgp is arista.avd.defined(true) %}
+  address_family_ipv4:
+    peer_groups:
+    - name: {{ bgp_peer_groups.ipv4_underlay_peers.name | default('IPv4-UNDERLAY-PEERS') }}
+      activate: false
+{%     endif %}
+{% endif %}
