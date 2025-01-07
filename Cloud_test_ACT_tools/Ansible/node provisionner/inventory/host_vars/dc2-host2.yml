@@ -1,0 +1,8 @@
+---
+
+# rc.local
+rc_local_config:
+  - "ip addr add 10.10.200.11/24 dev et1"
+  - "ip link set et1 up"
+  - "ip route add 10.10.100.0/24 via 10.10.200.1 dev et1"
+  - "ip route add 10.0.10.128/26 via 10.10.200.1 dev et1"

@@ -1,0 +1,119 @@
+---
+# This playbook configures the host in the ACT lab with proper IP and routes
+# It will also set the nodes in the github_runners group with docker and register it to you repo as a self-hosted runner
+
+- name: Setup ansible node
+  hosts: github_runners
+  become: true
+  tags: [runner]
+  gather_facts: true
+  vars:
+    created_username: avd
+    become_user: "{{ ansible_user }}"
+    ansible_become: yes
+    validation_mode_loose: true
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+
+  tasks:
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Setup passwordless sudo
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s' 
+
+    - name: Create a new regular user with sudo privileges
+      user:
+        name: "{{ created_username }}"
+        state: present
+        groups: sudo
+        append: true
+        create_home: true
+
+    - name: Update apt and install required packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - python3-pip
+        state: latest
+        update_cache: true
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: true
+
+    - name: Install Docker Module for Python
+      pip:
+        name: docker
+    
+    - name: Add users to the docker group
+      shell:
+        cmd: "sudo usermod -a -G docker cvpadmin && sudo usermod -a -G docker avd"
+
+- name: Setup github runner service
+  hosts: github_runners
+  become: true
+  tags: [runner]
+  gather_facts: true
+  vars:
+    become_user: "{{ ansible_user }}"
+    ansible_become: yes
+    ansible_become_pass: "{{ ansible_sudo_pass }}"
+    validation_mode_loose: true
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+  roles:
+    - role: ansible-github_actions_runner
+      notify: reboot_node
+
+  handlers:
+  - name: reboot_node
+    ansible.builtin.reboot:
+      msg: "Rebooting machine in 5 seconds"
+
+- name: Setup Ubuntu hosts
+  hosts: ubuntu
+  become: true
+  tags: [hosts]
+  vars:
+    ansible_become: yes
+    validation_mode_loose: true
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+  tasks:
+    - name: update the rc.local file
+      ansible.builtin.lineinfile:
+        path: /etc/rc.local
+        regexp: 'ip link set et1 up'
+        line: "{{ rc_local_config | join('\n') }}"
+        state: present
+        backup: yes
+        backrefs: yes
+      notify: reboot_node
+
+  handlers:
+  - name: reboot_node
+    ansible.builtin.reboot:
+      msg: "Rebooting machine in 5 seconds"
