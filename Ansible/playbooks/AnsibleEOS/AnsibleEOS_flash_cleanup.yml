@@ -1,14 +1,26 @@
 # This playbook will "cleanup" the EOS device flash by removing all EOS images not currently used to boot
-# REQUIREMENTS: arista.eos ansible galaxy collection
+# REQUIREMENTS:
+#  - install ansible-core (pip install ansible-core)
+#  - install arista.eos ansible galaxy collection (ansible-galaxy collection install arista.eos)
+# TO RUN:
+#  ansible-playbook playbooks/AnsibleEOS/AnsibleEOS_flash_cleanup.yml -i inventory/inventory.yml
 
 - name: Cleanup the flash on EOS devices
-  hosts: dc1-leaf1 dc1-leaf2 dc1-leaf3 # replace with your value
+  hosts: all
   connection: network_cli
   gather_facts: false
 
+  vars_prompt:
+  - name: username
+    prompt: "EOS Username"
+    private: no
+  - name: password
+    prompt: "EOS Password"
+    private: yes
+
   vars:
-    ansible_user: 'cvpadmin' # replace with your value
-    ansible_password: 'arista123' # replace with your value
+    ansible_user: "{{ username }}"
+    ansible_password: "{{ password }}"
     ansible_network_os: eos
     ansible_become: yes
     ansible_become_method: enable
