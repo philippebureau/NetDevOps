@@ -27,7 +27,7 @@
     validation_mode_loose: true
     ansible_httpapi_use_ssl: true
     ansible_httpapi_validate_certs: false
-    # Use older EOS ciphers before 4.31.0:
+    # Use older EOS ciphers before 4.31.0 for python 3.10, uncomment line below 
     # ansible_httpapi_ciphers: AES256-SHA:DHE-RSA-AES256-SHA:AES128-SHA:DHE-RSA-AES128-SHA
 
   tasks:
