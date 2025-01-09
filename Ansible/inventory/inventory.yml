@@ -1,0 +1,11 @@
+---
+all:
+  hosts:
+    dc1-leaf1:
+      ansible_host: 10.18.138.175
+    dc1-leaf2:
+      ansible_host: 10.18.138.244
+    dc1-leaf3:
+      ansible_host: 10.18.138.207
+    dc1-leaf4:
+      ansible_host: 10.18.138.206
