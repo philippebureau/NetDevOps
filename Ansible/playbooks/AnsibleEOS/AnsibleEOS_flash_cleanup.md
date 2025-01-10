@@ -17,5 +17,5 @@ ansible-playbook playbooks/AnsibleEOS/AnsibleEOS_flash_cleanup.yml -i inventory/
 At execution, the playbook will request to provide username and password to access the EOS devices
 ![](../../../media/flash_cleanup1.png)
 
-When completed, the termial output for the task called `Files deleted` will show what file have been deleted on each device
+When completed, the terminal output for the task called `Files deleted` will show what file have been deleted on each device
 ![](../../../media/flash_cleanup2.png)
