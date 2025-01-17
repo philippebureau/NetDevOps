@@ -9,3 +9,33 @@ all:
       ansible_host: 10.18.138.207
     dc1-leaf4:
       ansible_host: 10.18.138.206
+  children:
+    CVP:
+      hosts:
+        cv_server:
+          ansible_host: 10.18.138.202
+          ansible_user: cvpadmin
+          ansible_password: arista123
+          ansible_connection: httpapi
+          ansible_httpapi_use_ssl: true
+          ansible_httpapi_validate_certs: false
+          ansible_httpapi_port: 443
+          cv_collection: v3
+    ACT:
+      hosts:
+        dc1-spine1:
+          ansible_host: 10.18.138.181
+        dc1-spine2:
+          ansible_host: 10.18.138.205
+        dc1-leaf1:
+          ansible_host: 10.18.138.175
+        dc1-leaf2:
+          ansible_host: 10.18.138.244
+        dc1-leaf3:
+          ansible_host: 10.18.138.207
+        dc1-leaf4:
+          ansible_host: 10.18.138.206
+        dc1-brdr1:
+          ansible_host: 10.18.138.209
+        dc1-brdr2:
+          ansible_host: 10.18.138.201

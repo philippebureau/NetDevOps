@@ -1,0 +1,27 @@
+---
+# This playbook can be used to rest devices in CVP network provisionnig
+# When migrating from AVD 'eos_config_deploy_cvp' to 'cv_deploy' roles
+# the devices need to be removed from network provisioning in CVP
+# Devices will be returned to the undefined container
+
+- name: "Trigger a provisioning reset on EOS devices"
+  hosts: all     
+  connection: local
+  gather_facts: false
+  vars:
+    EOS_targets: ACT    # set to a group in the inventory you want to reset
+    CVP_target: cv_server     # set to cvp host in the inventory file
+  tasks:
+    - name: build the reset list
+      ansible.builtin.set_fact:
+        cvp_devices: "{{ cvp_devices | d([]) + [ {'fqdn': item, 'parentContainerName': '' } ] }}"
+      loop: "{{ groups[EOS_targets] }}"
+      run_once: true
+
+    - name: "Reset provisioning on targets"
+      arista.cvp.cv_device_v3:
+        devices: "{{ cvp_devices }}"
+        state: provisioning_reset
+        search_key: hostname
+      delegate_to: "{{ CVP_target }}"
+      run_once: true
