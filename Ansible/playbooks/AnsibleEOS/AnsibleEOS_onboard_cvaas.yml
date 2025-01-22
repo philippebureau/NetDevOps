@@ -1,0 +1,88 @@
+---
+# This playbook will connect to CVaaS and generate an onboarding token than push the token to target devices and start terminattr 
+# The target devices will be onboarded in CVaaS
+- hosts: localhost
+  gather_facts: no
+  vars:
+    cvaas_url: www.cv-prod-na-northeast1-b.arista.io                                            # change to match your tenant region
+    cvaas_service_token: "{{lookup('file', '/home/pbureau/cvaas_arista_ce_canada.tok')}}"       # Service Account auth token
+
+  tasks:
+# Generate token for CVaaS Canadian cluster
+  - name: "Generating TerminAttr onboarding token on CVaaS Canada"
+    tags: [build]
+    ansible.builtin.uri:
+      url: "https://{{cvaas_url}}/api/v3/services/admin.Enrollment/AddEnrollmentToken"
+      method: POST
+      headers:
+        Accept: "application/json"
+        Cookie: "access_token={{ cvaas_service_token }}"
+      validate_certs: no
+      return_content: yes
+      body: '{"enrollmentToken": {"reenrollDevices": ["*"], "validFor": "720h"}}'
+    register: cv_onboarding_token_canada
+    until: cv_onboarding_token_canada.status == 200
+    retries: 10
+    delay: 2
+  # Writing cvaas token to file
+  - name: "Parsing CVaaS token"
+    tags: [build]
+    set_fact:
+      cv_onboarding_token_canada: "{{ cv_onboarding_token_canada.content | list | join }}"
+  - name: "Writing CVaaS token to file"
+    tags: [build]
+    copy:
+      content: "{{ cv_onboarding_token_canada[0].enrollmentToken.token }}"
+      dest: "./cvaas-token.tok"
+
+
+- name: Onboard devices to CVaaS
+  hosts: DATACENTER                             # Change to your value from inventory file
+  vars:
+    ansible_user: cvpadmin                      # Change to a valid username on EOS devices
+    ansible_password: arista123                 # Change to a valid password on EOS devices
+    ansible_connection: httpapi
+    ansible_httpapi_use_ssl: True
+    ansible_httpapi_validate_certs: False
+    ansible_network_os: eos
+    ansible_httpapi_port: 443
+    ansible_python_interpreter: $(which python3) 
+    terminattr_vrf: default                     # Change this if TerminiAttr needs to use another VRF
+  tasks:
+  - name: "Copy onboarding token and start the TerminAttr daemon"
+    tags: [onboard]
+    ansible.builtin.uri:
+      url: "https://{{ansible_user}}:{{ansible_password}}@{{hostvars[inventory_hostname].ansible_host}}/command-api"
+      method: POST
+      headers:
+        Accept: "application/json"
+      validate_certs: no
+      return_content: yes
+      force_basic_auth: true
+      body:
+        jsonrpc: "2.0"
+        method: "runCmds"
+        params:
+          version: 1
+          cmds:
+          - "enable"
+          - cmd: "copy terminal: file:/tmp/onboarding-token"
+            input: "{{lookup('file', './cvaas-token.tok')}}"
+          - "configure"
+          - "daemon TerminAttr"
+          - "shutdown"
+          - "exec /usr/bin/TerminAttr -cvaddr=apiserver.arista.io:443 -cvauth=token-secure,/tmp/onboarding-token -cvvrf={{terminattr_vrf}} -disableaaa -smashexcludes=ale,flexCounter,hardware,kni,pulse,strata -ingestexclude=/Sysdb/cell/1/agent,/Sysdb/cell/2/agent -taillogs"
+          - "no shutdown"
+          format: json
+          timestamps: false
+          autoComplete: false
+          expandAliases: false
+          stopOnError: false
+          streaming: false
+          includeErrorDetail: false
+        id: EapiExplorer-1
+      body_format: json
+    register: cv_onboarding_token
+    until: cv_onboarding_token.status == 200
+    retries: 10
+    delay: 2
