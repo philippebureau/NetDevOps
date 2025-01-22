@@ -6,7 +6,7 @@
 #  ansible-playbook playbooks/AnsibleEOS/AnsibleEOS_flash_cleanup.yml -i inventory/inventory.yml
 
 - name: Cleanup the flash on EOS devices
-  hosts: all
+  hosts: POD1                 # change to point at correct target(s)
   connection: network_cli
   gather_facts: false
 
