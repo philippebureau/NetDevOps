@@ -37,7 +37,7 @@
 
 
 - name: Onboard devices to CVaaS
-  hosts: DATACENTER                             # Change to your value from inventory file
+  hosts: POD1                                   # Change to your value from inventory file
   vars:
     ansible_user: cvpadmin                      # Change to a valid username on EOS devices
     ansible_password: arista123                 # Change to a valid password on EOS devices
