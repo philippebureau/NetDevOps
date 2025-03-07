@@ -1,0 +1,25 @@
+---
+# This playbook can be used to delete devices (decommission) from CVP
+# Device decommission can take 2-3 min per device... be patient
+
+- name: "Delete devices from CVP"
+  hosts: all     
+  connection: local
+  gather_facts: false
+  vars:
+    EOS_targets: ACT          # set to a group in the inventory you want to reset
+    CVP_target: cv_server     # set to cvp host in the inventory file
+  tasks:
+    - name: build the decomission list
+      ansible.builtin.set_fact:
+        cvp_devices: "{{ cvp_devices | d([]) + [ {'fqdn': item, 'parentContainerName': '' } ] }}"
+      loop: "{{ groups[EOS_targets] }}"
+      run_once: true
+
+    - name: "Decommission on CVP"
+      arista.cvp.cv_device_v3:
+        devices: "{{ cvp_devices }}"
+        state: absent
+        search_key: hostname
+      delegate_to: "{{ CVP_target }}"
+      run_once: true
