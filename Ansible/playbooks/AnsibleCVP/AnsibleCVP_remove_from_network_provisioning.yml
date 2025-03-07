@@ -1,5 +1,5 @@
 ---
-# This playbook can be used to rest devices in CVP network provisionnig
+# This playbook can be used to reset devices in CVP network provisionnig
 # When migrating from AVD 'eos_config_deploy_cvp' to 'cv_deploy' roles
 # the devices need to be removed from network provisioning in CVP
 # Devices will be returned to the undefined container
