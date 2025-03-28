@@ -1,0 +1,34 @@
+# This playbook will compare the running-config with intended configuration file provided by the "intended_config" variable
+# The intended configuration will be parsed by EOS in a configuration session to avoid out of sequence false positive in the diff function
+- name: Validate configuration compliance
+  hosts: dc1-leaf1    # replace with your value
+  connection: httpapi
+  gather_facts: false
+  collections:
+    - arista.eos
+  vars:
+    ansible_user: 'cvpadmin' # replace with your value
+    ansible_password: 'arista123' # replace with your value
+    ansible_network_os: eos
+    ansible_become: yes
+    ansible_become_method: enable
+    validation_mode_loose: true
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    config_file_path: '/../inventory/intended/configs/'  # replace with your value
+
+  tasks:
+  #  # requires fix for issue 501 (https://github.com/ansible-collections/arista.eos/issues/501)
+  #  # in the meantime the collection can be installed directly from my branch with this command:
+  #  # ansible-galaxy collection install git+https://github.com/philippebureau/arista.eos.git,fix-issue-501
+  #  # requires to run the ansible-playbook command with --diff argument
+    - name: diff the running config against a master config
+      arista.eos.eos_config:
+        diff_against: validate_config
+        intended_config: "{{ lookup('file', playbook_dir + config_file_path + inventory_hostname + '.cfg') }}"
+      register: config_diff
+
+    - name: Show the difference
+      ansible.utils.fact_diff:
+        before: "{{ config_diff['diff']['before'] }}"
+        after: "{{ config_diff['diff']['after'] }}"
