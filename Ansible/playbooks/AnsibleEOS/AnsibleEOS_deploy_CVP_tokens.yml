@@ -20,10 +20,42 @@
 # USER INPUT
 ############
 
-- name: Verify tags are used
+- name: Set facts
   hosts: localhost
   gather_facts: false
   tasks:
+    - name: set CVaaS facts
+      tags: [ tokens, cvaas_token ]
+      ansible.builtin.set_fact:
+        # CVP variables
+        cvaas_host: "www.cv-prod-na-northeast1-b.arista.io"                # change the URL to the right CVaaS instance
+        cvaas_token: "{{lookup('file', '~/cvaas_arista_ce_canada.tok')}}"        # point to service account token file or replace with token content
+    - name: set onprem CVP facts
+      tags: [ tokens, onprem_token ]
+      ansible.builtin.set_fact:
+        # CVP variables
+        cvp_onprem_host: "10.18.175.95"                                     # change the IP to the right CVP On-prem instance
+        cvp_token: "{{lookup('file', '~/ACT_AVD_CI_EXTENDED.tok')}}"        # point to service account token file or replace with token content
+    - name: set EOS deploy targets
+      tags: [ always ]
+      # EOS targets from inventory
+      ansible.builtin.set_fact:
+        eos_targets: "DATACENTER"                                        # Change to match EOS targets in inventory
+
+    - name: set EOS facts
+      tags: [ deploy, deploy_cvaas, deploy_onprem ]
+      ansible.builtin.set_fact:
+        # EOS variables
+        ansible_user: "cvpadmin"                                           # Change to match EOS devices user
+        ansible_password: "arista123"                                      # Change to match EOS devices password
+      delegate_to: "{{ item }}"
+      delegate_facts: True
+      with_items: "{{ groups['all'] }}"
+      when: item != "localhost"
+############
+
+  pre_tasks:
+    # Enforce the use of tags with the playbook
     - name: set tag facts
       set_fact:
         tag_facts: |
@@ -44,36 +76,6 @@
     - name: fail_playbook
       ansible.builtin.fail:
         msg: "Braking playbook execution"
-
-
-
-- name: Set facts
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: set CVaaS facts
-      tags: [ tokens, cvaas_token ]
-      ansible.builtin.set_fact:
-        # CVP variables
-        cvaas_host: "www.cv-prod-na-northeast1-b.arista.io"                # change the URL to the right CVaaS instance
-        cvaas_token: "{{lookup('file', '../cvaas-srv-token.tok')}}"        # point to service account token file or replace with token content
-    - name: set onprem CVP facts
-      tags: [ tokens, onprem_token ]
-      ansible.builtin.set_fact:
-        # CVP variables
-        cvp_onprem_host: "192.168.0.5"                                     # change the IP to the right CVP On-prem instance
-        cvp_token: "{{lookup('file', '../ACT/ACT-srv-token.tok')}}"        # point to service account token file or replace with token content
-    - name: set EOS facts
-      tags: [ deploy ]
-      ansible.builtin.set_fact:
-        # EOS variables
-        ansible_user: "cvpadmin"                                           # Change to match EOS devices user
-        ansible_password: "arista123"                                      # Change to match EOS devices password
-      delegate_to: "{{ item }}"
-      delegate_facts: True
-      with_items: "{{ groups['all'] }}"
-      when: item != "localhost"
-############
 
 - name: "Create onboarding tokens on CVaaS and on-prem CVP"
   hosts: localhost
@@ -133,10 +135,9 @@
       dest: "./onprem-token"
 
 - name: Deploy token
-  hosts: POC
+  hosts: "{{ hostvars['localhost']['eos_targets'] }}"
   connection: httpapi
   gather_facts: false
-  tags: [ deploy ]
   vars:
     ansible_network_os: eos
     ansible_become: yes
@@ -146,6 +147,7 @@
     ansible_httpapi_validate_certs: false
   tasks:
     - name: deploy tokens
+      tags: [ deploy ]
       ansible.builtin.uri:
         url: "https://{{ansible_user}}:{{ansible_password}}@{{hostvars[inventory_hostname].ansible_host}}/command-api"
         method: POST
