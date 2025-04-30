@@ -1,0 +1,59 @@
+---
+# This playbook can be used to create a CC with CVP Actions
+# Requires the ansible collection ansible.cvp
+# The `action` key value has to be the action ID, not the action name.  
+# you can find the action ID in the URL path when in the action in CVP
+
+- name: CVP Change Control Test approve_and_execute
+  hosts: CVaaS
+  gather_facts: false
+  vars:
+    change:
+      name: Download Certificates
+      notes: Created via playbook
+      activities:
+        - action: "DCe6qcGAWcfKg1eUZB67z"  # This is the action ID, not the name
+          name: download cert to dc1-leaf1
+          arguments:
+            - name: DeviceID
+              value: ada6129821b84c3c8f7a0d0ad3630ef0   # device serial number
+            - name: "file_name"
+              value: "dc1-leaf1.crt"
+            - name: "server"
+              value: "10.18.171.226"
+            - name: "path"
+              value: "/"
+            - name: "vrf"
+              value: "default"
+          stage: Cert_download
+        - action: "DCe6qcGAWcfKg1eUZB67z"
+          name: download cert to dc1-leaf2
+          arguments:
+            - name: DeviceID
+              value: 9160796837df4936b8362ff38a716a1d
+            - name: "file_name"
+              value: "dc1-leaf2.crt"
+            - name: "server"
+              value: "10.18.171.226"
+            - name: "path"
+              value: "/"
+            - name: "vrf"
+              value: "default"
+          stage: Cert_download
+      stages:
+        - name: Cert_download
+          mode: parallel
+
+  tasks:
+    # Create the CC
+    - name: "Create a change control on {{ inventory_hostname }}"
+      arista.cvp.cv_change_control_v3:
+        state: set
+        change: "{{ change }}"
+      register: cv_change_control_test
+
+    # Approve and Execute the CC
+    - name: "Approve and Execute a change control using change_id field on {{ inventory_hostname }}"
+      arista.cvp.cv_change_control_v3:
+        state: approve_and_execute
+        change_id: ["{{ cv_change_control_test.data.id }}"]
