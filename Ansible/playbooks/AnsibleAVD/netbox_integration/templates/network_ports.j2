@@ -1,0 +1,27 @@
+---
+{#
+The following fields MUST be defined in Netbox interfaces
+  name
+  description
+  802.1Q Mode
+  untagged VLAN
+#}
+{%  if netbox_interfaces is defined and netbox_interfaces|length > 0 %}
+netbox_import:
+{%    for values in netbox_interfaces %}
+  - switches: [ {{values['value']['device']['name']}} ]
+    switch_ports: [ {{values['value']['name']}} ]
+    description: "{{values['value']['description']}}"
+{%      if values['value']['mode']['value'] == 'tagged' %}
+    mode: trunk
+{%        set tagged_vlans = []%}
+{%        for vlan in values['value']['tagged_vlans'] %}
+{%          set tagged_vlans = tagged_vlans.append(vlan['vid']) %}
+{%        endfor %}
+    vlans: {{tagged_vlans | join(',')}}
+{%      elif values['value']['mode']['value'] == 'access' %}
+    mode: access
+    vlans: {{values['value']['untagged_vlan']['vid']}}
+{%      endif %}
+{%    endfor %}
+{% endif %}
