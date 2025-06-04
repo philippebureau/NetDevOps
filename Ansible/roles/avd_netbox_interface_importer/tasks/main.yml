@@ -1,0 +1,11 @@
+---
+# tasks file for avd_netbox_interface_importer
+- name: Get interfaces with "{{target_tag}}" tag
+  ansible.builtin.set_fact:
+    netbox_interfaces: "{{ query('netbox.netbox.nb_lookup', 'interfaces', api_endpoint=netbox_url, token=netbox_token, api_filter='tag=' ~ target_tag)}}"
+
+- name: Generage AVD networks_ports structured data
+  ansible.builtin.template:
+    src: network_ports.j2
+    dest: "{{file_output}}"
+    mode: 0664

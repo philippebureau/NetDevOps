@@ -1,0 +1,7 @@
+---
+# vars file for avd_netbox_interface_importer
+
+# netbox_url: ""        # Replace with Netbox URL
+# netbox_token: ""      # Replace with Netbox password
+# target_tag: ""        # Replace with tag you want to use.  Use the slug, not tag name.  Example tag AVD_IMPORT slug is avd_import(same as name but all lower case and spaces replaced with -)
+# file_output: ""       # Dedicated group_vars file for role output.  

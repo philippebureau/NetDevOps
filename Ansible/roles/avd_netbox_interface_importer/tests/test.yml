@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  gather_facts: false
+  roles:
+    - avd_netbox_interface_importer
+  vars:
+    netbox_url: "https://oohv9917.cloud.netboxapp.com"    # Replace with Netbox URL
+    netbox_token: "{{vault_netbox_token}}"                # Replace with Netbox password
+    target_tag: avd_import    #   Replace with tag you want to use.  Use the slug, not tag name.  Example tag AVD_IMPORT slug is avd_import(same as name but all lower case and spaces replaced with -)
+    template_file: "../netbox/templates/network_ports.j2" # Template file in context to the playbook
+    file_output: "../inventory/DataCenter/group_vars/CONNECTED_ENDPOINTS/netbox_import.yml" # Dedicated group_vars file for output
