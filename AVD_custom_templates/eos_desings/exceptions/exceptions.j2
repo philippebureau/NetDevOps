@@ -1,0 +1,16 @@
+{# 
+This template can be used to handle exceptions in one file
+The strucured_config assigned to nodes with be merged in eos_design
+rendred structured configuration
+use the following data model:
+exceptions:  <list of dict>
+  - node: <str; required; unique; must match the inventory_hostname entry>
+    structured_config: <dict; use eos_cli_config_gen>
+#}
+{% if exceptions is arista.avd.defined %}
+{%   for item in exceptions %}
+{%     if item.node == inventory_hostname %}
+{{ item.structured_config }}
+{%     endif %}
+{%   endfor %}
+{% endif %}
