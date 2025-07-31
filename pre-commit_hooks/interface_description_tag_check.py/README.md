@@ -1,9 +1,15 @@
 # Interface description tag check
 This hook allows to check for specific tags that you want to allow to be used in AVD `network_ports` data-model.
 
-Set%he allowed tags in the script value `ALLOWED_KEYWORDS`
+Set the allowed tags in a YAML file and provide the file path to the hook in `.pre-commit-config.yml` 
 
-> example: ALLOWED_KEYWORDS = { "MON", "TEST" }
+> example: 
+> ```yaml
+> allowed_keywords:
+>   - "MON"
+>   - "TEST"
+>   - "PROD"
+> ```
 
 ## Hook configuration example
 
@@ -18,7 +24,12 @@ repos:
         types: [yaml]
         files: inventory/DataCenter/group_vars/CONNECTED_ENDPOINTS/CONNECTED_ENDPOINTS.yml
         additional_dependencies: [pyyaml]
+        args: ["--allowed_list", "pre_commit_hooks/keyword_list.yml"]
+
 ```
+>note: the args parameter list value must start with `--allowed_list` followed by the file path as per the example above.
+
+>note2: the `files` parameter can use regex matching ex: `inventory/(DataCenter|MPLS)/(group_vars/|host_vars/)`
 
 
 ## output example
