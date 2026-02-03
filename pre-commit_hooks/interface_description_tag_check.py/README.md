@@ -35,7 +35,7 @@ repos:
 ## output example
 
 script value:
-`ALLOWED_KEYWORDS = { "MON", "TEST" }`
+`ALLOWED_KEYWORDS = [ "MON", "TEST" ]`
 
 AVDvdata-model:
 ```yaml
