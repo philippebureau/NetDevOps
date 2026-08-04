@@ -1,0 +1,32 @@
+---
+# this playbook with download and install an EOS extension (SWIX) from CVP on-prem
+# the extension MUST be available in the software management studios
+- name: install an extension
+  hosts: all
+  gather_facts: false
+  # modify vars based on your environment
+  vars:
+    cvp_server: '192.168.0.5'
+    extension: 'TerminAttr-1.37.2-1.swix'
+    ansible_user: 'cvpadmin'
+    ansible_password: 'put your password here'
+    vrf: MGMT
+
+  tasks:
+    - name: install a SWIX from CVP
+      vars:
+        ansible_connection: httpapi
+        ansible_network_os: eos
+        ansible_python_interpreter: $(which python3)
+        ansible_become: yes
+        ansible_become_method: enable
+        ansible_httpapi_use_ssl: true
+        ansible_httpapi_validate_certs: false
+        ansible_httpapi_port: 443
+      arista.eos.eos_command:
+        commands:
+          - enable
+          - "cli vrf {{ vrf }}"
+          - "copy https://{{ cvp_server }}/cvpservice/image/getImagebyId/{{ extension }} extension:"
+          - extension {{ extension }}
+          - copy installed-extensions boot-extensions
