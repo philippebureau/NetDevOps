@@ -1,6 +1,6 @@
 # Manage Change Control Custom Actions on CVP / CVaaS
 
-Script: `CVP/manage_cc_custom_action.py`
+Script: `manage_cc_custom_action.py`
 
 Manage Change Control custom actions on Arista CloudVision Portal (on-prem CVP or CVaaS) via the Resource API REST gateway. Supports creating, updating, upserting, listing, and deleting custom actions.
 
@@ -19,13 +19,13 @@ Manage Change Control custom actions on Arista CloudVision Portal (on-prem CVP o
 **Username/password** (prompted if `--password` is omitted):
 
 ```bash
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin list
+python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin list
 ```
 
 **Service account token:**
 
 ```bash
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --token <service-account-token> list
+python3 manage_cc_custom_action.py --host 192.168.0.5 --token <service-account-token> list
 ```
 
 ### CVaaS (CloudVision as a Service)
@@ -33,7 +33,7 @@ python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --token <service-accou
 CVaaS requires a service account token -- username/password auth is not available. The script auto-detects all CVaaS regional hosts and enforces token auth with proper TLS verification.
 
 ```bash
-python3 CVP/manage_cc_custom_action.py --host www.arista.io --token <service-account-token> list
+python3 manage_cc_custom_action.py --host www.arista.io --token <service-account-token> list
 ```
 
 Use the `--host` value matching your CVaaS region:
@@ -68,7 +68,7 @@ To create a service account token in CVaaS, go to **Settings > Access Control > 
 Shows all actions of type `ACTION_TYPE_CHANGECONTROL_CUSTOM` with their ID, name, language, and package origin.
 
 ```bash
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin list
+python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin list
 ```
 
 Example output:
@@ -85,7 +85,7 @@ ID                                       NAME                                LAN
 Uploads a Python script as a new custom action on CVP.
 
 ```bash
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin create \
+python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin create \
     --name "Validate BGP Neighbors" \
     --script-file scripts/validate_bgp.py \
     --description "Checks all BGP sessions are Established before proceeding"
@@ -106,12 +106,12 @@ Looks up the action by `--action-id` or `--name`, then applies changes. Fields n
 
 ```bash
 # Update by name
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin update \
+python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin update \
     --name "Validate BGP Neighbors" \
     --script-file scripts/validate_bgp_v2.py
 
 # Update by ID
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin update \
+python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin update \
     --action-id a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
     --script-file scripts/validate_bgp_v2.py \
     --description "Updated: now also checks BFD status"
@@ -131,7 +131,7 @@ python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin up
 If an action with the given `--name` exists, it is updated. Otherwise a new action is created. This is the recommended command for CI/CD pipelines.
 
 ```bash
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin upsert \
+python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin upsert \
     --name "Validate BGP Neighbors" \
     --script-file scripts/validate_bgp.py \
     --description "Checks all BGP sessions are Established"
@@ -150,11 +150,11 @@ python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin up
 
 ```bash
 # Delete by name
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin delete \
+python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin delete \
     --name "Validate BGP Neighbors"
 
 # Delete by ID
-python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin delete \
+python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin delete \
     --action-id a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
@@ -210,7 +210,7 @@ You can also use a shorthand where the value is the default directly:
 
 ```bash
 # Deploy an action from a git repo to CVP on every merge
-python3 CVP/manage_cc_custom_action.py \
+python3 manage_cc_custom_action.py \
     --host "$CVP_HOST" \
     --token "$CVP_TOKEN" \
     upsert \
@@ -229,7 +229,7 @@ for script in actions/*.py; do
     args_flag=""
     [ -f "$args_file" ] && args_flag="--args-file $args_file"
 
-    python3 CVP/manage_cc_custom_action.py \
+    python3 manage_cc_custom_action.py \
         --host 192.168.0.5 --token "$CVP_TOKEN" \
         upsert --name "$name" --script-file "$script" $args_flag
 done

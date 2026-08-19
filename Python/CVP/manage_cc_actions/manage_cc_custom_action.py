@@ -9,22 +9,22 @@ Uses the Resource API REST gateway to manage actions:
 
 Usage:
     # List all custom actions
-    python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin list
+    python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin list
 
     # Create a new custom action from a script file
-    python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin create \
+    python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin create \
         --name "My Action" --script-file path/to/script.py --description "Does something"
 
     # Update an existing action's script
-    python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin update \
+    python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin update \
         --action-id <uuid> --script-file path/to/updated_script.py
 
     # Create or update by name (updates if name already exists)
-    python3 CVP/manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin upsert \
+    python3 manage_cc_custom_action.py --host 192.168.0.5 --username cvpadmin upsert \
         --name "My Action" --script-file path/to/script.py
 
     # Use a service account token instead of user/pass
-    python3 CVP/manage_cc_custom_action.py --token <token> --host 192.168.0.5 create \
+    python3 manage_cc_custom_action.py --token <token> --host 192.168.0.5 create \
         --name "My Action" --script-file path/to/script.py
 """
 
