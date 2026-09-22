@@ -1,0 +1,45 @@
+---
+# This playbook generates an onboarding token on CVaaS and
+# saves it in digital_twin/clab/cvaas-token.tok
+- hosts: localhost
+  gather_facts: false
+  # USER INPUTS
+  # This should be defined in a vault or group_vars
+  vars:
+    # CVaaS service account token
+    cvaas_token: "cvaas service account token"
+    # CVaaS 
+    # This can be found on your CVaaS URL
+    # example: www.cv-prod-us-4.arista.io
+    cvaas_region: "region"
+
+  tasks:
+    - name: Generate TerminAttr onboarding token on CVaaS
+      no_log: true
+      ansible.builtin.uri:
+        url: "https://{{ cvaas_region }}/api/resources/admin.Enrollment/AddEnrollmentToken"
+        method: POST
+        headers:
+          Accept: application/json
+          Authorization: "Bearer {{ cvaas_token }}"
+        body_format: json
+        body:
+          enrollmentToken:
+            reenrollDevices:
+              - "*"
+            validFor: 7200s
+        status_code: 200
+        validate_certs: true
+        return_content: true
+      register: cv_onboarding_response
+
+    - name: Parse CVaaS onboarding token response
+      no_log: true
+      ansible.builtin.set_fact:
+        cv_onboarding_token: "{{ cv_onboarding_response.content | from_json }}"
+
+    - name: Write CVaaS onboarding token to file
+      no_log: true
+      ansible.builtin.copy:
+        content: "{{ cv_onboarding_token.enrollmentToken.token }}"
+        dest: "./cvaas-token.tok"
